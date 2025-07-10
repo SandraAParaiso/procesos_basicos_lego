@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Procesos Psicológicos - Juego LEGO Interactivo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            font-size: 1.2em;
+        }
+        
+        .game-area {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .pieces-container {
+            flex: 2;
+            background: #ecf0f1;
+            border-radius: 15px;
+            padding: 20px;
+            min-height: 400px;
+            position: relative;
+            border: 3px dashed #bdc3c7;
+        }
+        
+        .pieces-container h3 {
+            text-align: center;
+            color: #34495e;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+        }
+        
+        .sorting-area {
+            flex: 1;
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            border: 3px solid #27ae60;
+            min-height: 400px;
+        }
+        
+        .sorting-area h3 {
+            text-align: center;
+            color: #27ae60;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+        }
+        
+        .lego-piece {
+            display: inline-block;
+            margin: 10px;
+            cursor: grab;
+            transition: all 0.3s ease;
+            position: relative;
+            user-select: none;
+        }
+        
+        .lego-piece:active {
+            cursor: grabbing;
+        }
+        
+        .lego-piece.dragging {
+            opacity: 0.7;
+            transform: scale(1.05);
+            z-index: 1000;
+        }
+        
+        .lego-block {
+            width: 140px;
+            height: 60px;
+            border-radius: 8px;
+            position: relative;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            border: 2px solid;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 12px;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+        }
+        
+        .lego-block::before {
+            content: '';
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: inherit;
+            border: 2px solid;
+            border-color: inherit;
+        }
+        
+        .lego-block::after {
+            content: '';
+            position: absolute;
+            top: -12px;
+            right: 20px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: inherit;
+            border: 2px solid;
+            border-color: inherit;
+        }
+        
+        .lego-block .bottom-connectors {
+            position: absolute;
+            bottom: -12px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .connector {
+            width: 20px;
+            height: 12px;
+            background: inherit;
+            border: 2px solid;
+            border-color: inherit;
+            border-radius: 3px;
+        }
+        
+        /* Colores específicos para cada proceso */
+        .atencion { background: #e74c3c; border-color: #c0392b; }
+        .percepcion { background: #3498db; border-color: #2980b9; }
+        .memoria { background: #2ecc71; border-color: #27ae60; }
+        .pensamiento { background: #9b59b6; border-color: #8e44ad; }
+        .emocion { background: #f39c12; border-color: #e67e22; }
+        .aprendizaje { background: #e91e63; border-color: #c2185b; }
+        .motivacion { background: #ff5722; border-color: #d84315; }
+        .lenguaje { background: #607d8b; border-color: #455a64; }
+        .conducta { background: #795548; border-color: #5d4037; }
+        .desarrollo { background: #4caf50; border-color: #388e3c; }
+        
+        .drop-zone {
+            min-height: 80px;
+            border: 2px dashed #95a5a6;
+            border-radius: 10px;
+            margin: 10px 0;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.5);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .drop-zone.drag-over {
+            border-color: #27ae60;
+            background: rgba(46, 204, 113, 0.1);
+            transform: scale(1.02);
+        }
+        
+        .drop-zone .phase-label {
+            position: absolute;
+            top: 5px;
+            left: 10px;
+            font-size: 12px;
+            color: #7f8c8d;
+            font-weight: bold;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-reset {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .btn-reset:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+        }
+        
+        .btn-check {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .btn-check:hover {
+            background: #2ecc71;
+            transform: translateY(-2px);
+        }
+        
+        .btn-hint {
+            background: #f39c12;
+            color: white;
+        }
+        
+        .btn-hint:hover {
+            background: #e67e22;
+            transform: translateY(-2px);
+        }
+        
+        .feedback {
+            text-align: center;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-weight: bold;
+            display: none;
+        }
+        
+        .feedback.success {
+            background: #d5edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .feedback.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .feedback.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .hint-panel {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .hint-panel h4 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+        
+        .hint-panel ul {
+            color: #856404;
+            padding-left: 20px;
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+        
+        .lego-piece.correct {
+            animation: bounce 1s ease-in-out;
+        }
+        
+        .score {
+            text-align: center;
+            font-size: 1.2em;
+            color: #2c3e50;
+            margin-top: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .game-area {
+                flex-direction: column;
+            }
+            
+            .lego-block {
+                width: 120px;
+                height: 50px;
+                font-size: 10px;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧠 Procesos Psicológicos LEGO 🧩</h1>
+        <p class="subtitle">Arrastra las piezas para ordenar los procesos según las fases del procesamiento psicológico</p>
+        
+        <div class="controls">
+            <button class="btn-reset" onclick="resetGame()">🔄 Reiniciar</button>
+            <button class="btn-check" onclick="checkOrder()">✅ Verificar Orden</button>
+            <button class="btn-hint" onclick="toggleHint()">💡 Pista</button>
+        </div>
+        
+        <div class="game-area">
+            <div class="pieces-container" id="piecesContainer">
+                <h3>🎲 Piezas Desordenadas</h3>
+                <!-- Las piezas se generarán aquí -->
+            </div>
+            
+            <div class="sorting-area">
+                <h3>📋 Área de Ordenamiento</h3>
+                <div class="drop-zone" data-phase="1">
+                    <div class="phase-label">Fase 1: Entrada Sensorial</div>
+                </div>
+                <div class="drop-zone" data-phase="2">
+                    <div class="phase-label">Fase 2: Procesamiento Cognitivo</div>
+                </div>
+                <div class="drop-zone" data-phase="3">
+                    <div class="phase-label">Fase 3: Respuesta Emocional</div>
+                </div>
+                <div class="drop-zone" data-phase="4">
+                    <div class="phase-label">Fase 4: Salida Conductual</div>
+                </div>
+                <div class="drop-zone" data-phase="5">
+                    <div class="phase-label">Fase 5: Desarrollo/Aprendizaje</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="feedback" id="feedback"></div>
+        
+        <div class="hint-panel" id="hintPanel">
+            <h4>💡 Pistas para ordenar los procesos:</h4>
+            <ul>
+                <li><strong>Fase 1 - Entrada Sensorial:</strong> Procesos que captan información del entorno</li>
+                <li><strong>Fase 2 - Procesamiento Cognitivo:</strong> Procesos que analizan y procesan la información</li>
+                <li><strong>Fase 3 - Respuesta Emocional:</strong> Procesos que generan estados emocionales</li>
+                <li><strong>Fase 4 - Salida Conductual:</strong> Procesos que producen respuestas observables</li>
+                <li><strong>Fase 5 - Desarrollo/Aprendizaje:</strong> Procesos que modifican y mejoran el sistema</li>
+            </ul>
+        </div>
+        
+        <div class="score" id="score">Puntuación: 0/10</div>
+    </div>
+
+    <script>
+        const processes = [
+            {name: 'ATENCIÓN', class: 'atencion', correctPhase: 1},
+            {name: 'PERCEPCIÓN', class: 'percepcion', correctPhase: 1},
+            {name: 'MEMORIA', class: 'memoria', correctPhase: 2},
+            {name: 'PENSAMIENTO', class: 'pensamiento', correctPhase: 2},
+            {name: 'EMOCIÓN', class: 'emocion', correctPhase: 3},
+            {name: 'MOTIVACIÓN', class: 'motivacion', correctPhase: 3},
+            {name: 'LENGUAJE', class: 'lenguaje', correctPhase: 4},
+            {name: 'CONDUCTA', class: 'conducta', correctPhase: 4},
+            {name: 'APRENDIZAJE', class: 'aprendizaje', correctPhase: 5},
+            {name: 'DESARROLLO', class: 'desarrollo', correctPhase: 5}
+        ];
+        
+        let draggedElement = null;
+        let score = 0;
+        
+        function createLegoPiece(process, index) {
+            const piece = document.createElement('div');
+            piece.className = 'lego-piece';
+            piece.draggable = true;
+            piece.dataset.process = process.name;
+            piece.dataset.correctPhase = process.correctPhase;
+            piece.id = `piece-${index}`;
+            
+            piece.innerHTML = `
+                <div class="lego-block ${process.class}">
+                    ${process.name}
+                    <div class="bottom-connectors">
+                        <div class="connector"></div>
+                        <div class="connector"></div>
+                    </div>
+                </div>
+            `;
+            
+            piece.addEventListener('dragstart', handleDragStart);
+            piece.addEventListener('dragend', handleDragEnd);
+            
+            return piece;
+        }
+        
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+        
+        function initializeGame() {
+            const container = document.getElementById('piecesContainer');
+            const shuffledProcesses = shuffleArray(processes);
+            
+            // Limpiar contenedor
+            container.innerHTML = '<h3>🎲 Piezas Desordenadas</h3>';
+            
+            // Crear y agregar piezas
+            shuffledProcesses.forEach((process, index) => {
+                const piece = createLegoPiece(process, index);
+                container.appendChild(piece);
+            });
+            
+            // Configurar drop zones
+            const dropZones = document.querySelectorAll('.drop-zone');
+            dropZones.forEach(zone => {
+                zone.addEventListener('dragover', handleDragOver);
+                zone.addEventListener('drop', handleDrop);
+                zone.addEventListener('dragenter', handleDragEnter);
+                zone.addEventListener('dragleave', handleDragLeave);
+            });
+            
+            updateScore();
+        }
+        
+        function handleDragStart(e) {
+            draggedElement = e.target.closest('.lego-piece');
+            draggedElement.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        }
+        
+        function handleDragEnd(e) {
+            if (draggedElement) {
+                draggedElement.classList.remove('dragging');
+                draggedElement = null;
+            }
+        }
+        
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        }
+        
+        function handleDragEnter(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('drag-over');
+        }
+        
+        function handleDragLeave(e) {
+            e.currentTarget.classList.remove('drag-over');
+        }
+        
+        function handleDrop(e) {
+            e.preventDefault();
+            const dropZone = e.currentTarget;
+            dropZone.classList.remove('drag-over');
+            
+            if (draggedElement) {
+                dropZone.appendChild(draggedElement);
+                updateScore();
+            }
+        }
+        
+        function updateScore() {
+            let correctCount = 0;
+            const dropZones = document.querySelectorAll('.drop-zone');
+            
+            dropZones.forEach(zone => {
+                const pieces = zone.querySelectorAll('.lego-piece');
+                pieces.forEach(piece => {
+                    const correctPhase = parseInt(piece.dataset.correctPhase);
+                    const currentPhase = parseInt(zone.dataset.phase);
+                    
+                    if (correctPhase === currentPhase) {
+                        correctCount++;
+                        piece.classList.add('correct');
+                    } else {
+                        piece.classList.remove('correct');
+                    }
+                });
+            });
+            
+            score = correctCount;
+            document.getElementById('score').textContent = `Puntuación: ${score}/10`;
+        }
+        
+        function checkOrder() {
+            updateScore();
+            const feedback = document.getElementById('feedback');
+            
+            if (score === 10) {
+                feedback.className = 'feedback success';
+                feedback.textContent = '🎉 ¡Excelente! Has ordenado correctamente todos los procesos psicológicos. ¡Felicitaciones!';
+                feedback.style.display = 'block';
+                
+                // Animación de celebración
+                document.querySelectorAll('.lego-piece.correct').forEach(piece => {
+                    piece.style.animation = 'bounce 1s ease-in-out';
+                });
+            } else if (score >= 7) {
+                feedback.className = 'feedback success';
+                feedback.textContent = `🌟 ¡Muy bien! Has colocado ${score} de 10 procesos correctamente. ¡Casi perfecto!`;
+                feedback.style.display = 'block';
+            } else if (score >= 4) {
+                feedback.className = 'feedback info';
+                feedback.textContent = `👍 Buen intento. Has colocado ${score} de 10 procesos correctamente. ¡Sigue intentando!`;
+                feedback.style.display = 'block';
+            } else {
+                feedback.className = 'feedback error';
+                feedback.textContent = `🤔 Has colocado ${score} de 10 procesos correctamente. ¡Inténtalo de nuevo! Usa la pista si necesitas ayuda.`;
+                feedback.style.display = 'block';
+            }
+            
+            setTimeout(() => {
+                feedback.style.display = 'none';
+            }, 5000);
+        }
+        
+        function resetGame() {
+            // Mover todas las piezas de vuelta al contenedor principal
+            const pieces = document.querySelectorAll('.lego-piece');
+            const container = document.getElementById('piecesContainer');
+            
+            pieces.forEach(piece => {
+                piece.classList.remove('correct');
+                piece.style.animation = '';
+                container.appendChild(piece);
+            });
+            
+            // Ocultar feedback
+            document.getElementById('feedback').style.display = 'none';
+            
+            // Reinicializar el juego
+            initializeGame();
+        }
+        
+        function toggleHint() {
+            const hintPanel = document.getElementById('hintPanel');
+            hintPanel.style.display = hintPanel.style.display === 'none' ? 'block' : 'none';
+        }
+        
+        // Inicializar el juego al cargar la página
+        document.addEventListener('DOMContentLoaded', initializeGame);
+    </script>
+</body>
+</html>
